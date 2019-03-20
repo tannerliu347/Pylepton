@@ -186,7 +186,6 @@ class LeptonCamera:
             fileExist = os.path.isfile(filePath)
         filePath = os.path.join(os.getcwd(), self.testName, dataFileName)
         fo = open(filePath, 'w')
-        fo.write('Extracted from file: ' + str(self.fileName) + '\n')
         dnt = datetime.datetime.now()
         fo.write('Date: ' + str(dnt.month) + '/' + str(dnt.day) + '/' + str(dnt.year) + '\n')
         fo.write('Time: ' + str(dnt.hour) + ':' + str(dnt.minute) + ':' + str(dnt.second) + '\n')
