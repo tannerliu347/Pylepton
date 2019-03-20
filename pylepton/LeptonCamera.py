@@ -6,6 +6,7 @@ import os
 import subprocess
 import time
 import datetime
+from pylepton.Lepton3 import Lepton3
 
 class LeptonCamera:
     """
@@ -25,21 +26,15 @@ class LeptonCamera:
     def __init__(self, testName, pixelLocs):
         self.testName = testName
         self.pixelLocs = pixelLocs
-        self.dataFolder = False
-
-    # for testing purposes only
-    def setFileName(self, fileName):
-        self.fileName = fileName
+        #self.dataFolder = False
 
     """
-    Controls lepton module to capture a thermal image. Updates fileName instance variable to the newly captured file
+    Controls lepton module to capture a thermal image. Updates rawArr
     """
     def takeImg(self):
-        # calls lepton sdk executable to save a png image file and a txt temperature file
-        fileName = str(subprocess.check_output(["sudo", "./raspberrypi_video"]))
-        fileName = fileName[2:-3]
-        #time.sleep(2)
-        self.fileName = fileName
+        with Lepton3("/dev/spidev0.0") as l:
+            rawArray, _ = l.capture()
+        self.rawArr = rawArray
 
     """
     Reads from file saved by takeImg and convert temperatures to a 120 by 160 array
@@ -50,15 +45,7 @@ class LeptonCamera:
     a 2d numpy array of temperature information in celsius
     """
     def getTempArr(self):
-        # read from last temperature file and convert to an array in python
-        tempFile = open(self.fileName, "r")
-        tempArr = np.empty([120, 160]) # read in from txt file and turn into a 120 * 160 array
-        temps = cycle(tempFile.read().split())
-        tempFile.close()
-        for i in range(0, 120):
-            for j in range(0, 160):
-                tempArr[i, j] = next(temps)
-        return tempArr
+        return self.rawArr / 100 - 273.15
 
     """
     Select a subarray centered around a specified point

@@ -23,7 +23,7 @@ SPI_IOC_WR_BITS_PER_WORD = _IOW(SPI_IOC_MAGIC, 3, "=B")
 
 SPI_IOC_RD_MAX_SPEED_HZ  = _IOR(SPI_IOC_MAGIC, 4, "=I")
 SPI_IOC_WR_MAX_SPEED_HZ  = _IOW(SPI_IOC_MAGIC, 4, "=I")
- 
+
 
 class Lepton3(Lepton):
   def __init__(self, spi_dev = "/dev/spidev0.0"):
@@ -91,4 +91,3 @@ class Lepton3(Lepton):
 
     # TODO: turn on telemetry to get real frame id, sum on this array is fast enough though (< 500us)
     return data_buffer, data_buffer.sum()
-  
