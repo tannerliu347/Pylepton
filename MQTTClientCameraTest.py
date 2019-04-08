@@ -22,8 +22,6 @@ pixel2Follow = {'First point' : [1,1]}
 camera1 = LeptonCamera('test1', pixel2Follow)
 camera1.takeImg()
 #camera1.saveData()
-imgArr = camera1.getTempArr()
-imgStr = '\n'.join('\t'.join('%0.3f' %x for x in y) for y in imgArr)
 #imgStr = open('rgb4.txt', 'r').read()
 
 #print(camera1.testName + '/' + camera1.testName + 'Lepton' +  + '.txt')
@@ -40,8 +38,6 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
     msgRec = msg.payload
-    if msg.payload == "start":
-        [lastData, lastImg] = camera1.takeData()
     eval(msg.payload)  # runs message string as if a cmd line entry
 
 # Topics: mb12/asset/CameraCntrl, .../DataPts .../Imgs
@@ -52,7 +48,7 @@ client.on_message = on_message
 
 client.connect("mb12.iotfm.org", 1883, 60)
 # For listening for take img cmds:
-# client.subscribe("FLIRControl")
+client.subscribe("asset/FLIR1/cntrl")
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
@@ -67,9 +63,16 @@ client.connect("mb12.iotfm.org", 1883, 60)
 client.loop_start()  # start listening in a thread and proceed
 
 try:
-
-    client.publish("asset/Imgs", payload=imgStr, qos=0, retain=False)
-    time.sleep(5)
+    lastImgStr = ""
+    while True:
+        imgArr = camera1.getTempArr()
+        imgStr = '\n'.join('\t'.join('%0.3f' %x for x in y) for y in imgArr)
+        if imgStr != lastImgStr:
+            client.publish("asset/FLIR1/Imgs", payload=imgStr, qos=0, retain=False)
+        else:
+            client.publish("asset/FLIR1/Imgs", payload = "no new image to publish", qos=0, retain=False)
+        lastImgStr = imgStr
+        time.sleep(5)
 
 except KeyboardInterrupt:  # so that aborting with Ctrl+C works cleanly
     # stop recording
