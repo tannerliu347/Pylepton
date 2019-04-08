@@ -18,9 +18,10 @@ from pylepton.LeptonCamera import LeptonCamera
 
 print('Starting...\n')
 
+testName = 'test1'
 pixel2Follow = {'First point' : [1,1]}
-camera1 = LeptonCamera('test1', pixel2Follow)
-camera1.takeImg()
+camera1 = LeptonCamera(testName, pixel2Follow)
+saveLocally = False
 #camera1.saveData()
 #imgStr = open('rgb4.txt', 'r').read()
 
@@ -62,21 +63,47 @@ client.subscribe("asset/FLIR1/cntrl")
 
 client.loop_start()  # start listening in a thread and proceed
 
-try:
-    lastImgStr = ""
-    while True:
-        imgArr = camera1.getTempArr()
-        imgStr = '\n'.join('\t'.join('%0.3f' %x for x in y) for y in imgArr)
-        if imgStr != lastImgStr:
-            client.publish("asset/FLIR1/Imgs", payload=imgStr, qos=0, retain=False)
-        else:
-            client.publish("asset/FLIR1/Imgs", payload = "no new image to publish", qos=0, retain=False)
-        lastImgStr = imgStr
-        time.sleep(5)
 
-except KeyboardInterrupt:  # so that aborting with Ctrl+C works cleanly
-    # stop recording
-    print('Process interrupted')
+def setTestName(tn):
+    testName = tn
+
+
+def setPixel2Follow(p2f):
+    pixel2Follow = p2f
+
+
+def instantiateCamera():
+    camera1 = LeptonCamera(testName, pixel2Follow)
+
+
+def saveTextOnPi(saveOrNot):
+    saveLocally = saveOrNot
+
+
+def takeOneImg():
+    camera1.takeImg()
+    imgArr = camera1.getTempArr()
+    imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
+    client.publish("asset/FLIR1/Imgs", payload=imgStr, qos=0, retain=False)
+
+def streamImg(sleepSeconds = 5):
+    try:
+        lastImgStr = ""
+        while True:
+            imgArr = camera1.getTempArr()
+            imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
+            if imgStr != lastImgStr:
+                client.publish("asset/FLIR1/Imgs", payload=imgStr,
+                            qos=0, retain=False)
+            else:
+                client.publish(
+                    "asset/FLIR1/Imgs", payload="no new image to publish", qos=0, retain=False)
+            lastImgStr = imgStr
+            time.sleep(sleepSeconds)
+    except KeyboardInterrupt:  # so that aborting with Ctrl+C works cleanly
+        # stop recording
+        print('Process interrupted')
+
 
 #finally:
  #   print('Done')p
