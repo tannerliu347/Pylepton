@@ -20,7 +20,7 @@ print('Starting...\n')
 
 testName = 'test1'
 pixel2Follow = {'First point' : [1,1]}
-camera1 = LeptonCamera(testName, pixel2Follow)
+#camera1 = LeptonCamera(testName, pixel2Follow)
 saveLocally = False
 #camera1.saveData()
 #imgStr = open('rgb4.txt', 'r').read()
@@ -42,14 +42,14 @@ def on_message(client, userdata, msg):
     eval(msg.payload)  # runs message string as if a cmd line entry
 
 # Topics: mb12/asset/CameraCntrl, .../DataPts .../Imgs
-client = mqtt.Client(client_id="mb12andon1")
-client.username_pw_set("mb12andon1", password="FzXVLvSagaZ58qMf")
+client = mqtt.Client(client_id="FLIR1.1")
+client.username_pw_set("FLIR1.1", password="GeorgeP@1927")
 client.on_connect = on_connect
 client.on_message = on_message
 
-client.connect("mb12.iotfm.org", 1883, 60)
+client.connect("18.208.90.243", 1883, 60)
 # For listening for take img cmds:
-client.subscribe("asset/FLIR1/cntrl")
+client.subscribe("asset/FLIR1/Cntrl")
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
@@ -87,22 +87,24 @@ def takeOneImg():
     client.publish("asset/FLIR1/Imgs", payload=imgStr, qos=0, retain=False)
 
 def streamImg(sleepSeconds = 5):
-    try:
-        lastImgStr = ""
-        while True:
+    while True:
+        try:
+            lastImgStr = ""
             imgArr = camera1.getTempArr()
             imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
             if imgStr != lastImgStr:
                 client.publish("asset/FLIR1/Imgs", payload=imgStr,
-                            qos=0, retain=False)
+                                qos=0, retain=False)
             else:
                 client.publish(
                     "asset/FLIR1/Imgs", payload="no new image to publish", qos=0, retain=False)
             lastImgStr = imgStr
             time.sleep(sleepSeconds)
-    except KeyboardInterrupt:  # so that aborting with Ctrl+C works cleanly
-        # stop recording
-        print('Process interrupted')
+        except KeyboardInterrupt:
+            print('Process interrupted')
+
+def printSth():
+    print("Ha")
 
 
 #finally:
