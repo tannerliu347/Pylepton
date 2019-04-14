@@ -20,7 +20,7 @@ print('Starting...\n')
 
 testName = 'test1'
 pixel2Follow = {'First point' : [1,1]}
-#camera1 = LeptonCamera(testName, pixel2Follow)
+camera1 = LeptonCamera(testName, pixel2Follow)
 saveLocally = False
 #camera1.saveData()
 #imgStr = open('rgb4.txt', 'r').read()
@@ -34,6 +34,8 @@ def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     #client.subscribe("asset/andon1/state")
+    #takeOneImg()
+    
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -49,7 +51,7 @@ client.on_message = on_message
 
 client.connect("18.208.90.243", 1883, 60)
 # For listening for take img cmds:
-client.subscribe("asset/FLIR1/Cntrl")
+client.subscribe("Asset/FLIR1/Cntrl")
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
@@ -62,7 +64,7 @@ client.subscribe("asset/FLIR1/Cntrl")
 # camera1.pickAreas()
 
 client.loop_start()  # start listening in a thread and proceed
-
+print("listening loop has started")
 
 def setTestName(tn):
     testName = tn
@@ -84,11 +86,12 @@ def takeOneImg():
     camera1.takeImg()
     imgArr = camera1.getTempArr()
     imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
-    client.publish("asset/FLIR1/Imgs", payload=imgStr, qos=0, retain=False)
+    client.publish("asset/FLIR1/Imgs", payload = imgStr, qos=0, retain=False)
+    time.sleep(1) # delay needed for UKNOWN REASON
 
 def streamImg(sleepSeconds = 5):
-    while True:
-        try:
+    try:
+        while True:
             lastImgStr = ""
             imgArr = camera1.getTempArr()
             imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
@@ -97,15 +100,14 @@ def streamImg(sleepSeconds = 5):
                                 qos=0, retain=False)
             else:
                 client.publish(
-                    "asset/FLIR1/Imgs", payload="no new image to publish", qos=0, retain=False)
+                    "Asset/FLIR1/Imgs", payload="no new image to publish", qos=0, retain=False)
             lastImgStr = imgStr
             time.sleep(sleepSeconds)
-        except KeyboardInterrupt:
+    except KeyboardInterrupt:
             print('Process interrupted')
 
-def printSth():
-    print("Ha")
-
+takeOneImg();
+#streamImg();
 
 #finally:
  #   print('Done')p
