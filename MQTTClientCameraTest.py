@@ -1,5 +1,6 @@
 import time
 import paho.mqtt.client as mqtt
+import numpy as np
 from pylepton.LeptonCamera import LeptonCamera
 
 print('Starting...\n')
@@ -46,6 +47,14 @@ client.subscribe("Asset/FLIR1/Cntrl")
 # camera1.firstImg()
 # camera1.pickAreas()
 
+
+def arr2Str(tempArr):
+    tempStr = ''
+    for x in np.nditer(tempArr):
+        tempStr = tempStr + ',' + str(x)
+    tempStr = tempStr[1:len(tempStr) - 1]
+    return tempStr
+
 def setTestName(tn):
     testName = tn
 
@@ -65,7 +74,7 @@ def saveTextOnPi(saveOrNot):
 def takeOneImg():
     camera1.takeImg()
     imgArr = camera1.getTempArr()
-    imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
+    imgStr = arr2Str(imgArr)
     client.publish("asset/FLIR1/Imgs", payload = imgStr, qos=0, retain=False)
     time.sleep(0.2) # delay needed for UKNOWN REASON
 
@@ -74,7 +83,7 @@ def streamImg(sleepSeconds = 5):
         while True:
             lastImgStr = ""
             imgArr = camera1.getTempArr()
-            imgStr = '\n'.join('\t'.join('%0.3f' % x for x in y) for y in imgArr)
+            imgStr = arr2Str
             if imgStr != lastImgStr:
                 client.publish("asset/FLIR1/Imgs", payload=imgStr,
                                 qos=0, retain=False)
